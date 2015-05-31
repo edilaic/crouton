@@ -205,8 +205,20 @@ else
     rm -f "$xorgconf"
 fi
 
-# Fix launching X11 from inside crosh (user doesn't own a TTY)
-sed -i 's/allowed_users=.*/allowed_users=anybody/' '/etc/X11/Xwrapper.config'
+install xorg arch=,dmz-cursor-theme arch=ttf-dejavu \
+        arch=,xserver-xorg-video-fbdev$ltspackages \
+        arch=,xserver-xorg-video-intel$ltspackages
+
+if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
+    # Fix launching X11 from inside crosh (user doesn't own a TTY)
+    sed -i 's/allowed_users=.*/allowed_users=anybody/' /etc/X11/Xwrapper.config
+elif [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
+    # Xorg 1.16 wants to run as normal user, which breaks crouton
+    cat >/etc/X11/Xwrapper.config <<EOF
+allowed_users=anybody
+needs_root_rights=yes
+EOF
+fi
 
 TIPS="$TIPS
 You can flip through your running chroot desktops and Chromium OS by hitting
